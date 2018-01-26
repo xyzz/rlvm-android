@@ -128,7 +128,7 @@ source ./command_wrapper.sh true
 
 # Build!
 cmake ../.. \
-	-DCMAKE_INSTALL_PREFIX=$DIR/prefix/$ARCH/ \
+	-DCMAKE_INSTALL_PREFIX=$DIR/toolchain/$ARCH/sysroot/usr/ \
 	-DARCH=$ARCH \
 	-DBUILD_TYPE=$BUILD_TYPE \
 	-DNDK_TRIPLET=$NDK_TRIPLET \
@@ -146,47 +146,25 @@ echo "==> Installing shared libraries"
 rm -rf ../app/src/main/jniLibs/$ABI/
 mkdir -p ../app/src/main/jniLibs/$ABI/
 
-# libopenmw.so is a special case
-find build/$ARCH/ -iname "libopenmw.so" -exec cp "{}" ../app/src/main/jniLibs/$ABI/ \;
+# # libopenmw.so is a special case
+# find build/$ARCH/ -iname "libopenmw.so" -exec cp "{}" ../app/src/main/jniLibs/$ABI/ \;
 
-# copy over libs we compiled
-cp prefix/$ARCH/lib/{libopenal,libSDL2,libGL}.so ../app/src/main/jniLibs/$ABI/
+# # copy over libs we compiled
+# cp prefix/$ARCH/lib/{libopenal,libSDL2,libGL}.so ../app/src/main/jniLibs/$ABI/
 
 # copy over libc++_shared
 find ./toolchain/$ARCH/ -iname "libc++_shared.so" -exec cp "{}" ../app/src/main/jniLibs/$ABI/ \;
 
 $NDK_TRIPLET-strip ../app/src/main/jniLibs/$ABI/*.so
 
-echo "==> Deploying resources"
-
-DST=$DIR/../app/src/main/assets/libopenmw/
-SRC=build/$ARCH/openmw-prefix/src/openmw-build/
-
-rm -rf "$DST" && mkdir -p "$DST"
-
-# resources
-cp -r "$SRC/resources" "$DST"
-
-# global config
-mkdir -p "$DST/openmw/"
-cp "$SRC/settings-default.cfg" "$DST/openmw/"
-cp "$SRC/gamecontrollerdb.txt" "$DST/openmw/"
-
-# local config
-mkdir -p "$DST/config/openmw/"
-# TODO: do we really need this twice?
-cp "$SRC/gamecontrollerdb.txt" "$DST/config/openmw/"
-cp "$DIR/../app/openmw-base.cfg" "$DST/config/openmw/openmw.cfg"
-cp "$DIR/../app/settings-base.cfg" "$DST/config/openmw/settings.cfg"
-
 echo "==> Making your debugging life easier"
 
-# copy unstripped libs to aid debugging
-rm -rf "./build/$ARCH/symbols" && mkdir -p "./build/$ARCH/symbols"
-cp "./build/$ARCH/openal-prefix/src/openal-build/libopenal.so" "./build/$ARCH/symbols/"
-cp "./build/$ARCH/sdl2-prefix/src/sdl2-build/obj/local/$ABI/libSDL2.so" "./build/$ARCH/symbols/"
-cp "./build/$ARCH/openmw-prefix/src/openmw-build/libopenmw.so" "./build/$ARCH/symbols/"
-cp "./build/$ARCH/gl4es-prefix/src/gl4es-build/obj/local/$ABI/libGL.so" "./build/$ARCH/symbols/"
+# # copy unstripped libs to aid debugging
+# rm -rf "./build/$ARCH/symbols" && mkdir -p "./build/$ARCH/symbols"
+# cp "./build/$ARCH/openal-prefix/src/openal-build/libopenal.so" "./build/$ARCH/symbols/"
+# cp "./build/$ARCH/sdl2-prefix/src/sdl2-build/obj/local/$ABI/libSDL2.so" "./build/$ARCH/symbols/"
+# cp "./build/$ARCH/openmw-prefix/src/openmw-build/libopenmw.so" "./build/$ARCH/symbols/"
+# cp "./build/$ARCH/gl4es-prefix/src/gl4es-build/obj/local/$ABI/libGL.so" "./build/$ARCH/symbols/"
 
 if [ $ASAN = true ]; then
 	cp "./toolchain/arm/lib64/clang/5.0/lib/linux/libclang_rt.asan-arm-android.so" "./build/$ARCH/symbols/"
