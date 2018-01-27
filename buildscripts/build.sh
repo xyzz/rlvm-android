@@ -103,11 +103,10 @@ echo "==> Download and set up the NDK"
 NCPU=$(grep -c ^processor /proc/cpuinfo)
 echo "==> Build using $NCPU CPUs"
 mkdir -p build/$ARCH/
-mkdir -p prefix/$ARCH/
 
 # symlink lib64 -> lib so we don't get half the libs in one directory half in another
-mkdir -p prefix/$ARCH/lib
-ln -sf lib prefix/$ARCH/lib64
+mkdir -p toolchain/$ARCH/sysroot/usr/lib
+ln -sf lib toolchain/$ARCH/sysroot/usr/lib64
 
 # generate command_wrapper.sh
 cat include/command_wrapper_head.sh.in | \
@@ -146,18 +145,15 @@ echo "==> Installing shared libraries"
 rm -rf ../app/src/main/jniLibs/$ABI/
 mkdir -p ../app/src/main/jniLibs/$ABI/
 
-# # libopenmw.so is a special case
-# find build/$ARCH/ -iname "libopenmw.so" -exec cp "{}" ../app/src/main/jniLibs/$ABI/ \;
-
-# # copy over libs we compiled
-# cp prefix/$ARCH/lib/{libopenal,libSDL2,libGL}.so ../app/src/main/jniLibs/$ABI/
+# copy over libs we compiled
+cp toolchain/$ARCH/sysroot/usr/lib/lib{SDL2,SDL2_mixer,SDL2_ttf,SDL2_image,GL,game}.so ../app/src/main/jniLibs/$ABI/
 
 # copy over libc++_shared
 find ./toolchain/$ARCH/ -iname "libc++_shared.so" -exec cp "{}" ../app/src/main/jniLibs/$ABI/ \;
 
 $NDK_TRIPLET-strip ../app/src/main/jniLibs/$ABI/*.so
 
-echo "==> Making your debugging life easier"
+# echo "==> Making your debugging life easier"
 
 # # copy unstripped libs to aid debugging
 # rm -rf "./build/$ARCH/symbols" && mkdir -p "./build/$ARCH/symbols"
@@ -166,14 +162,14 @@ echo "==> Making your debugging life easier"
 # cp "./build/$ARCH/openmw-prefix/src/openmw-build/libopenmw.so" "./build/$ARCH/symbols/"
 # cp "./build/$ARCH/gl4es-prefix/src/gl4es-build/obj/local/$ABI/libGL.so" "./build/$ARCH/symbols/"
 
-if [ $ASAN = true ]; then
-	cp "./toolchain/arm/lib64/clang/5.0/lib/linux/libclang_rt.asan-arm-android.so" "./build/$ARCH/symbols/"
-fi
+# if [ $ASAN = true ]; then
+# 	cp "./toolchain/arm/lib64/clang/5.0/lib/linux/libclang_rt.asan-arm-android.so" "./build/$ARCH/symbols/"
+# fi
 
-if [[ $ARCH = "arm" ]]; then
-	for file in ./build/$ARCH/symbols/*.so; do
-		PATH="$DIR/toolchain/ndk/prebuilt/linux-x86_64/bin/:$DIR/toolchain/$ARCH/$NDK_TRIPLET/bin/:$PATH" ./include/gdb-add-index $file
-	done
-fi
+# if [[ $ARCH = "arm" ]]; then
+# 	for file in ./build/$ARCH/symbols/*.so; do
+# 		PATH="$DIR/toolchain/ndk/prebuilt/linux-x86_64/bin/:$DIR/toolchain/$ARCH/$NDK_TRIPLET/bin/:$PATH" ./include/gdb-add-index $file
+# 	done
+# fi
 
 echo "==> Success"

@@ -14,13 +14,8 @@ if [[ $1 == "--toolchain" ]]; then
 	exit 0
 fi
 
-if [[ $1 == "--prefix" ]]; then
-	rm -rf prefix
-	exit 0
-fi
-
 # Generic clean, good most of the time
-rm -rf toolchain prefix build
+rm -rf toolchain build
 
 # Clean everything, including downloads
 if [[ $1 == "--all" ]]; then
