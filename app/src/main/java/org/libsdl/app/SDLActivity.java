@@ -140,6 +140,16 @@ public class SDLActivity extends Activity {
         mCurrentNativeState = NativeState.INIT;
     }
 
+    public void setScreenSize(final int w, final int h) {
+        Log.d("rlvm", "Setting screen size to " + w + " x " + h);
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                mSurface.setAuthoritativeSize(w, h);
+            }
+        });
+    }
+
     // Setup
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -511,6 +521,7 @@ public class SDLActivity extends Activity {
     public static native void nativeQuit();
     public static native void nativePause();
     public static native void nativeResume();
+    public static native void nativeReady();
     public static native void onNativeDropFile(String filename);
     public static native void onNativeResize(int x, int y, int format, float rate);
     public static native void onNativeKeyDown(int keycode);
@@ -1046,12 +1057,13 @@ class SDLSurface extends SurfaceView implements SurfaceHolder.Callback,
 
     // Keep track of the surface size to normalize touch events
     protected static float mWidth, mHeight;
+    protected static int mCorrectWidth, mCorrectHeight;
 
     // Startup
     public SDLSurface(Context context) {
         super(context);
 
-        getHolder().setFixedSize(1280, 960); // TODO
+        getHolder().setFixedSize(640, 480);
 
         getHolder().addCallback(this);
 
@@ -1073,6 +1085,12 @@ class SDLSurface extends SurfaceView implements SurfaceHolder.Callback,
         mHeight = 1.0f;
     }
 
+    public void setAuthoritativeSize(int w, int h) {
+        mCorrectWidth = w;
+        mCorrectHeight = h;
+        getHolder().setFixedSize(w, h);
+    }
+
     public void handlePause() {
         enableSensor(Sensor.TYPE_ACCELEROMETER, false);
     }
@@ -1088,6 +1106,10 @@ class SDLSurface extends SurfaceView implements SurfaceHolder.Callback,
 
     public Surface getNativeSurface() {
         return getHolder().getSurface();
+    }
+
+    public SurfaceHolder getSurfaceHolder() {
+        return getHolder();
     }
 
     // Called when we have a valid drawing surface
@@ -1209,6 +1231,10 @@ class SDLSurface extends SurfaceView implements SurfaceHolder.Callback,
         SDLActivity.onNativeSurfaceChanged();
 
         SDLActivity.handleNativeState();
+
+        if (width == mCorrectWidth && height == mCorrectHeight) {
+            SDLActivity.nativeReady();
+        }
     }
 
     // Key events
