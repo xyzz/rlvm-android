@@ -13,4 +13,12 @@ public class GameActivity extends SDLActivity {
                 "game"
         };
     }
+
+    @Override
+    public void onDestroy() {
+        finish();
+        // Just kill ourselves since running again results in a GL error
+        android.os.Process.killProcess(android.os.Process.myPid());
+        super.onDestroy();
+    }
 }

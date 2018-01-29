@@ -213,9 +213,13 @@ public class SDLActivity extends Activity {
 
         // Set up the surface
         mSurface = new SDLSurface(getApplication());
-//        mSurface.setLayoutParams(new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+        RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
+        params.addRule(RelativeLayout.CENTER_IN_PARENT, RelativeLayout.TRUE);
+        mSurface.setLayoutParams(params);
 
         mLayout = new RelativeLayout(this);
+        mLayout.setBackgroundColor(Color.BLACK);
         mLayout.addView(mSurface);
 
         setContentView(mLayout);
@@ -1083,12 +1087,36 @@ class SDLSurface extends SurfaceView implements SurfaceHolder.Callback,
         // Some arbitrary defaults to avoid a potential division by zero
         mWidth = 1.0f;
         mHeight = 1.0f;
+
+        mCorrectWidth = 1;
+        mCorrectHeight = 1;
+    }
+
+    @Override
+    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+        int widthSize = MeasureSpec.getSize(widthMeasureSpec);
+        int heightSize = MeasureSpec.getSize(heightMeasureSpec);
+
+        float myAspect = 1.0f * mCorrectWidth / mCorrectHeight;
+        float resultWidth = widthSize;
+        float resultHeight = resultWidth / myAspect;
+        if (resultHeight > heightSize) {
+            resultHeight = heightSize;
+            resultWidth = resultHeight * myAspect;
+        }
+
+        mWidth = resultWidth;
+        mHeight = resultHeight;
+        setMeasuredDimension((int)resultWidth, (int)resultHeight);
     }
 
     public void setAuthoritativeSize(int w, int h) {
         mCorrectWidth = w;
         mCorrectHeight = h;
         getHolder().setFixedSize(w, h);
+
+        requestLayout();
+        invalidate();
     }
 
     public void handlePause() {
