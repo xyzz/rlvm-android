@@ -74,6 +74,11 @@ else
 	CXXFLAGS="$CXXFLAGS -O0 -g"
 fi
 
+if [ $ARCH = "arm" ]; then
+	CFLAGS="$CFLAGS -mthumb"
+	CXXFLAGS="$CXXFLAGS -mthumb"
+fi
+
 # https://github.com/android-ndk/ndk/issues/105 to be fixed in r17
 LDFLAGS="$LDFLAGS -stdlib=libc++ -L$DIR/toolchain/ndk/sources/cxx-stl/llvm-libc++/libs/$ABI/"
 
